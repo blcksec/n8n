@@ -43,31 +43,48 @@ export class BinaryDataManager {
 		return BinaryDataManager.instance;
 	}
 
+	async copyBinaryFile(
+		binaryData: IBinaryData,
+		filePath: string,
+		executionId: string,
+	): Promise<IBinaryData> {
+		// If a manager handles this binary, copy over the binary file and return its reference id.
+		if (this.managers[this.binaryDataMode]) {
+			const fileName = await this.managers[this.binaryDataMode].copyBinaryFile(
+				filePath,
+				executionId,
+			);
+			// Add data manager reference id.
+			binaryData.id = this.generateBinaryId(fileName);
+
+			// Prevent preserving data in memory if handled by a data manager.
+			binaryData.data = this.binaryDataMode;
+		}
+
+		return binaryData;
+	}
+
 	async storeBinaryData(
 		binaryData: IBinaryData,
 		binaryBuffer: Buffer,
 		executionId: string,
 	): Promise<IBinaryData> {
-		const retBinaryData = binaryData;
-
-		// If a manager handles this binary, return the binary data with it's reference id.
+		// If a manager handles this binary, return the binary data with its reference id.
 		if (this.managers[this.binaryDataMode]) {
-			return this.managers[this.binaryDataMode]
-				.storeBinaryData(binaryBuffer, executionId)
-				.then((filename) => {
-					// Add data manager reference id.
-					retBinaryData.id = this.generateBinaryId(filename);
+			const fileName = await this.managers[this.binaryDataMode].storeBinaryData(
+				binaryBuffer,
+				executionId,
+			);
+			// Add data manager reference id.
+			binaryData.id = this.generateBinaryId(fileName);
 
-					// Prevent preserving data in memory if handled by a data manager.
-					retBinaryData.data = this.binaryDataMode;
-
-					// Short-circuit return to prevent further actions.
-					return retBinaryData;
-				});
+			// Prevent preserving data in memory if handled by a data manager.
+			binaryData.data = this.binaryDataMode;
+		} else {
+			// Else fallback to storing this data in memory.
+			binaryData.data = binaryBuffer.toString(BINARY_ENCODING);
 		}
 
-		// Else fallback to storing this data in memory.
-		retBinaryData.data = binaryBuffer.toString(BINARY_ENCODING);
 		return binaryData;
 	}
 

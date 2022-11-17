@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 
@@ -43,11 +43,18 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 			.then(() => {});
 	}
 
+	async copyBinaryFile(filePath: string, executionId: string): Promise<string> {
+		const binaryDataId = this.generateFileName(executionId);
+		await this.addBinaryIdToPersistMeta(executionId, binaryDataId);
+		await this.copyFileToLocalStorage(filePath, binaryDataId);
+		return binaryDataId;
+	}
+
 	async storeBinaryData(binaryBuffer: Buffer, executionId: string): Promise<string> {
 		const binaryDataId = this.generateFileName(executionId);
-		return this.addBinaryIdToPersistMeta(executionId, binaryDataId).then(async () =>
-			this.saveToLocalStorage(binaryBuffer, binaryDataId).then(() => binaryDataId),
-		);
+		await this.addBinaryIdToPersistMeta(executionId, binaryDataId);
+		await this.saveToLocalStorage(binaryBuffer, binaryDataId);
+		return binaryDataId;
 	}
 
 	async retrieveBinaryDataByIdentifier(identifier: string): Promise<Buffer> {
@@ -180,7 +187,7 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 	}
 
 	private generateFileName(prefix: string): string {
-		return `${prefix}_${uuid()}`;
+		return [prefix, uuid()].join('');
 	}
 
 	private getBinaryDataMetaPath() {
@@ -197,6 +204,10 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 
 	private async deleteFromLocalStorage(identifier: string) {
 		return fs.rm(path.join(this.storagePath, identifier));
+	}
+
+	private async copyFileToLocalStorage(source: string, identifier: string): Promise<void> {
+		await fs.cp(source, path.join(this.storagePath, identifier));
 	}
 
 	private async saveToLocalStorage(data: Buffer, identifier: string) {

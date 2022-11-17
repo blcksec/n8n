@@ -260,6 +260,7 @@ export interface IWebhookFunctions extends IWebhookFunctionsBase {
 			filePath?: string,
 			mimeType?: string,
 		): Promise<IBinaryData>;
+		copyBinaryFile(filePath: string, mimeType?: string): Promise<IBinaryData>;
 		request: (uriOrObject: string | IDataObject | any, options?: IDataObject) => Promise<any>;
 		requestWithAuthentication(
 			this: IAllExecuteFunctions,
@@ -308,6 +309,7 @@ export interface IBinaryDataConfig {
 
 export interface IBinaryDataManager {
 	init(startPurger: boolean): Promise<void>;
+	copyBinaryFile(filePath: string, executionId: string): Promise<string>;
 	storeBinaryData(binaryBuffer: Buffer, executionId: string): Promise<string>;
 	retrieveBinaryDataByIdentifier(identifier: string): Promise<Buffer>;
 	markDataForDeletionByExecutionId(executionId: string): Promise<void>;
