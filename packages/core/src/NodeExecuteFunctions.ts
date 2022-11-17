@@ -888,6 +888,11 @@ export async function copyBinaryFile(
 		data: '',
 	};
 
+	if (filePath) {
+		const filePathParts = path.parse(filePath);
+		returnData.fileName = filePathParts.base;
+	}
+
 	return BinaryDataManager.getInstance().copyBinaryFile(returnData, filePath, executionId);
 }
 

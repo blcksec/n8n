@@ -10,14 +10,17 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 
-import basicAuth from 'basic-auth';
-import { Response } from 'express';
 import fs from 'fs';
+import stream from 'stream';
+import { promisify } from 'util';
+import basicAuth from 'basic-auth';
+import type { Response } from 'express';
 import formidable from 'formidable';
 import isbot from 'isbot';
 import { file as tmpFile } from 'tmp-promise';
 import { randomBytes } from 'crypto';
-import { pipeline } from 'stream/promises';
+
+const pipeline = promisify(stream.pipeline);
 
 function authorizationError(resp: Response, realm: string, responseCode: number, message?: string) {
 	if (message === undefined) {
@@ -484,10 +487,8 @@ export class Webhook implements INodeType {
 			}
 		}
 
-		// @ts-ignore
-		const mimeType = headers['content-type'] || 'application/json';
+		const mimeType = headers['content-type'] ?? 'application/json';
 		if (mimeType.includes('multipart/form-data')) {
-			// @ts-ignore
 			const form = new formidable.IncomingForm({ multiples: true });
 
 			return new Promise((resolve, _reject) => {
@@ -561,7 +562,6 @@ export class Webhook implements INodeType {
 					},
 				};
 
-				const mimeType = req.header('content-type');
 				const binaryPropertyName = (options.binaryPropertyName || 'data') as string;
 				returnItem.binary![binaryPropertyName] = await this.helpers.copyBinaryFile(
 					binaryFile.path,
