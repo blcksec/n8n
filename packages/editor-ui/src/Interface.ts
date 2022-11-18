@@ -215,6 +215,7 @@ export interface IRestApi {
 	retryExecution(id: string, loadWorkflow?: boolean): Promise<boolean>;
 	getTimezones(): Promise<IDataObject>;
 	getBinaryBufferString(dataPath: string): Promise<string>;
+	getBinaryDownloadUrl(dataPath: string): string;
 }
 
 export interface INodeTranslationHeaders {

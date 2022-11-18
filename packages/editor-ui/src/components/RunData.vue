@@ -367,7 +367,7 @@ import BinaryDataDisplay from '@/components/BinaryDataDisplay.vue';
 import WarningTooltip from '@/components/WarningTooltip.vue';
 import NodeErrorView from '@/components/Error/NodeErrorView.vue';
 
-import { copyPaste } from '@/components/mixins/copyPaste';
+import { download } from '@/components/mixins/download';
 import { externalHooks } from "@/components/mixins/externalHooks";
 import { genericHelpers } from '@/components/mixins/genericHelpers';
 import { nodeHelpers } from '@/components/mixins/nodeHelpers';
@@ -389,7 +389,7 @@ export type EnterEditModeArgs = {
 };
 
 export default mixins(
-	copyPaste,
+	download,
 	externalHooks,
 	genericHelpers,
 	nodeHelpers,
@@ -1051,6 +1051,13 @@ export default mixins(
 			},
 			async downloadBinaryData (index: number, key: string) {
 				const binaryDataItem: IBinaryData = this.binaryData[index][key];
+
+				if(binaryDataItem.id?.startsWith('filesystem:')) {
+					const url = this.restApi().getBinaryDownloadUrl(binaryDataItem.id);
+					const fileName = [binaryDataItem.fileName, binaryDataItem.fileExtension].join('.');
+					this.downloadFile(url, fileName);
+					return;
+				}
 
 				let bufferString = 'data:' + binaryDataItem.mimeType + ';base64,';
 				if(binaryDataItem.id) {
