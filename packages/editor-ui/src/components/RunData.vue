@@ -282,6 +282,10 @@
 									<div><n8n-text size="small" :bold="true">{{ $locale.baseText('runData.mimeType') }}: </n8n-text></div>
 									<div :class="$style.binaryValue">{{binaryData.mimeType}}</div>
 								</div>
+								<div v-if="binaryData.fileSize">
+									<div><n8n-text size="small" :bold="true">{{ $locale.baseText('runData.fileSize') }}: </n8n-text></div>
+									<div :class="$style.binaryValue">{{binaryData.fileSize}}</div>
+								</div>
 
 								<div :class="$style.binaryButtonContainer">
 									<n8n-button size="small" :label="$locale.baseText('runData.showBinaryData')" class="binary-data-show-data-button" @click="displayBinaryData(index, key)" />

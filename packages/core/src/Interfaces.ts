@@ -309,9 +309,11 @@ export interface IBinaryDataConfig {
 
 export interface IBinaryDataManager {
 	init(startPurger: boolean): Promise<void>;
+	getFileSize(filePath: string): Promise<number>;
 	copyBinaryFile(filePath: string, executionId: string): Promise<string>;
 	storeBinaryData(binaryBuffer: Buffer, executionId: string): Promise<string>;
 	retrieveBinaryDataByIdentifier(identifier: string): Promise<Buffer>;
+	getBinaryPath(identifier: string): string;
 	markDataForDeletionByExecutionId(executionId: string): Promise<void>;
 	deleteMarkedFiles(): Promise<unknown>;
 	deleteBinaryDataByIdentifier(identifier: string): Promise<void>;

@@ -36,6 +36,7 @@ export interface IBinaryData {
 	fileName?: string;
 	directory?: string;
 	fileExtension?: string;
+	fileSize?: string;
 	id?: string;
 }
 

@@ -43,6 +43,11 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 			.then(() => {});
 	}
 
+	async getFileSize(identifier: string): Promise<number> {
+		const stats = await fs.stat(this.getBinaryPath(identifier));
+		return stats.size;
+	}
+
 	async copyBinaryFile(filePath: string, executionId: string): Promise<string> {
 		const binaryDataId = this.generateFileName(executionId);
 		await this.addBinaryIdToPersistMeta(executionId, binaryDataId);
@@ -59,6 +64,10 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 
 	async retrieveBinaryDataByIdentifier(identifier: string): Promise<Buffer> {
 		return this.retrieveFromLocalStorage(identifier);
+	}
+
+	getBinaryPath(identifier: string): string {
+		return path.join(this.storagePath, identifier);
 	}
 
 	async markDataForDeletionByExecutionId(executionId: string): Promise<void> {
@@ -203,19 +212,19 @@ export class BinaryDataFileSystem implements IBinaryDataManager {
 	}
 
 	private async deleteFromLocalStorage(identifier: string) {
-		return fs.rm(path.join(this.storagePath, identifier));
+		return fs.rm(this.getBinaryPath(identifier));
 	}
 
 	private async copyFileToLocalStorage(source: string, identifier: string): Promise<void> {
-		await fs.cp(source, path.join(this.storagePath, identifier));
+		await fs.cp(source, this.getBinaryPath(identifier));
 	}
 
 	private async saveToLocalStorage(data: Buffer, identifier: string) {
-		await fs.writeFile(path.join(this.storagePath, identifier), data);
+		await fs.writeFile(this.getBinaryPath(identifier), data);
 	}
 
 	private async retrieveFromLocalStorage(identifier: string): Promise<Buffer> {
-		const filePath = path.join(this.storagePath, identifier);
+		const filePath = this.getBinaryPath(identifier);
 		try {
 			return await fs.readFile(filePath);
 		} catch (e) {

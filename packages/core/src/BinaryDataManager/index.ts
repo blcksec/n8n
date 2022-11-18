@@ -1,6 +1,7 @@
-import { IBinaryData, INodeExecutionData } from 'n8n-workflow';
+import prettyBytes from 'pretty-bytes';
+import type { IBinaryData, INodeExecutionData } from 'n8n-workflow';
 import { BINARY_ENCODING } from '../Constants';
-import { IBinaryDataConfig, IBinaryDataManager } from '../Interfaces';
+import type { IBinaryDataConfig, IBinaryDataManager } from '../Interfaces';
 import { BinaryDataFileSystem } from './FileSystem';
 
 export class BinaryDataManager {
@@ -50,15 +51,18 @@ export class BinaryDataManager {
 	): Promise<IBinaryData> {
 		// If a manager handles this binary, copy over the binary file and return its reference id.
 		if (this.managers[this.binaryDataMode]) {
-			const fileName = await this.managers[this.binaryDataMode].copyBinaryFile(
+			const identifier = await this.managers[this.binaryDataMode].copyBinaryFile(
 				filePath,
 				executionId,
 			);
 			// Add data manager reference id.
-			binaryData.id = this.generateBinaryId(fileName);
+			binaryData.id = this.generateBinaryId(identifier);
 
 			// Prevent preserving data in memory if handled by a data manager.
 			binaryData.data = this.binaryDataMode;
+
+			const fileSize = await this.managers[this.binaryDataMode].getFileSize(identifier);
+			binaryData.fileSize = prettyBytes(fileSize);
 		}
 
 		return binaryData;
@@ -69,14 +73,16 @@ export class BinaryDataManager {
 		binaryBuffer: Buffer,
 		executionId: string,
 	): Promise<IBinaryData> {
+		binaryData.fileSize = prettyBytes(binaryBuffer.length);
+
 		// If a manager handles this binary, return the binary data with its reference id.
 		if (this.managers[this.binaryDataMode]) {
-			const fileName = await this.managers[this.binaryDataMode].storeBinaryData(
+			const identifier = await this.managers[this.binaryDataMode].storeBinaryData(
 				binaryBuffer,
 				executionId,
 			);
 			// Add data manager reference id.
-			binaryData.id = this.generateBinaryId(fileName);
+			binaryData.id = this.generateBinaryId(identifier);
 
 			// Prevent preserving data in memory if handled by a data manager.
 			binaryData.data = this.binaryDataMode;
@@ -100,6 +106,15 @@ export class BinaryDataManager {
 		const { mode, id } = this.splitBinaryModeFileId(identifier);
 		if (this.managers[mode]) {
 			return this.managers[mode].retrieveBinaryDataByIdentifier(id);
+		}
+
+		throw new Error('Storage mode used to store binary data not available');
+	}
+
+	getBinaryPath(identifier: string): string {
+		const { mode, id } = this.splitBinaryModeFileId(identifier);
+		if (this.managers[mode]) {
+			return this.managers[mode].getBinaryPath(id);
 		}
 
 		throw new Error('Storage mode used to store binary data not available');
